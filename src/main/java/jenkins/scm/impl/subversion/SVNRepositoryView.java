@@ -25,11 +25,11 @@ package jenkins.scm.impl.subversion;
 
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
-import hudson.scm.CredentialsSVNAuthenticationProviderImpl;
-import hudson.scm.FilterSVNAuthenticationManager;
-import hudson.scm.SVNAuthStoreHandlerImpl;
+import hudson.scm.*;
 import hudson.util.TimeUnit2;
 import jenkins.model.Jenkins;
+import jenkins.svnkit.auth.AuthenticationManager;
+import jenkins.svnkit.auth.DefaultSVNAuthenticationManager;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 import org.tmatesoft.svn.core.ISVNDirEntryHandler;
@@ -37,7 +37,6 @@ import org.tmatesoft.svn.core.SVNDirEntry;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNNodeKind;
 import org.tmatesoft.svn.core.SVNURL;
-import org.tmatesoft.svn.core.auth.ISVNAuthenticationManager;
 import org.tmatesoft.svn.core.internal.util.SVNPathUtil;
 import org.tmatesoft.svn.core.io.SVNRepository;
 import org.tmatesoft.svn.core.io.SVNRepositoryFactory;
@@ -65,7 +64,7 @@ public class SVNRepositoryView {
 
         File configDir = SVNWCUtil.getDefaultConfigurationDirectory();
 
-        ISVNAuthenticationManager sam = SVNWCUtil.createDefaultAuthenticationManager(configDir, null, null);
+        AuthenticationManager sam = new DefaultSVNAuthenticationManager(SVNWCUtil.createDefaultAuthenticationManager(configDir, null, null));
 
         sam.setAuthenticationProvider(new CredentialsSVNAuthenticationProviderImpl(credentials));
         SVNAuthStoreHandlerImpl.install(sam);

@@ -47,6 +47,9 @@ import hudson.slaves.DumbSlave;
 import hudson.triggers.SCMTrigger;
 import hudson.util.FormValidation;
 import hudson.util.StreamTaskListener;
+import jenkins.svnkit.auth.AuthenticationManager;
+import jenkins.svnkit.auth.DefaultSVNAuthenticationManager;
+import jenkins.svnkit.auth.SVNSSLAuthentication;
 import org.dom4j.Document;
 import org.dom4j.io.DOMReader;
 import org.junit.Test;
@@ -200,12 +203,12 @@ public class SubversionSCMTest extends AbstractSubversionTest {
 
         FreeStyleBuild b = p.scheduleBuild2(0, new Cause.UserIdCause()).get();
         System.out.println(b.getLog(LOG_LIMIT));
-        assertTrue(b.getLog(LOG_LIMIT).contains("At revision 13000"));
+        assertLogContains("at revision 13000", b);
         assertBuildStatus(Result.SUCCESS,b);
 
         b = p.scheduleBuild2(0, new Cause.UserIdCause()).get();
         System.out.println(b.getLog(LOG_LIMIT));
-        assertTrue(b.getLog(LOG_LIMIT).contains("At revision 13000"));
+        assertLogContains("at revision 13000", b);
         assertBuildStatus(Result.SUCCESS,b);
     }
 
@@ -221,7 +224,7 @@ public class SubversionSCMTest extends AbstractSubversionTest {
         
         FreeStyleBuild b = p.scheduleBuild2(0, new Cause.UserIdCause()).get();
         System.out.println(b.getLog(LOG_LIMIT));
-        assertTrue(b.getLog(LOG_LIMIT).contains("At revision 2"));
+        assertLogContains("At revision 2", b);
         assertBuildStatus(Result.SUCCESS,b);
     }
 
@@ -292,7 +295,7 @@ public class SubversionSCMTest extends AbstractSubversionTest {
         FreeStyleBuild b = p.scheduleBuild2(0, new Cause.UserIdCause(), 
         		new RevisionParameterAction(new SubversionSCM.SvnInfo(url, 13000))).get();
         System.out.println(b.getLog(LOG_LIMIT));
-        assertTrue(b.getLog(LOG_LIMIT).contains("At revision 13000"));
+        assertLogContains("at revision 13000", b);
         assertBuildStatus(Result.SUCCESS,b);
     }
 
@@ -379,7 +382,7 @@ public class SubversionSCMTest extends AbstractSubversionTest {
         FreeStyleBuild b = f.get();
 	
         System.out.println(b.getLog(LOG_LIMIT));
-        assertTrue(b.getLog(LOG_LIMIT).contains("At revision 14000"));
+        assertLogContains("at revision 14000", b);
         assertBuildStatus(Result.SUCCESS,b);
     }
 
@@ -783,7 +786,7 @@ public class SubversionSCMTest extends AbstractSubversionTest {
     @Bug(3904)
     public void testSymbolicLinkCheckout() throws Exception {
         // Only perform if symlink behavior is enabled
-        if (!"true".equals(System.getProperty("svnkit.symlinks"))) {
+        if (!"true".equals(System.getProperty("lib.svnkit.symlinks"))) {
             return;
         }
 
@@ -1229,8 +1232,9 @@ public class SubversionSCMTest extends AbstractSubversionTest {
         repository.testConnection();
     }
 
-    private ISVNAuthenticationManager createInMemoryManager() {
-        ISVNAuthenticationManager m = SVNWCUtil.createDefaultAuthenticationManager(hudson.root,null,null,false);
+    private AuthenticationManager createInMemoryManager() {
+        AuthenticationManager m = new DefaultSVNAuthenticationManager(
+                SVNWCUtil.createDefaultAuthenticationManager(hudson.root,null,null,false));
         m.setAuthenticationProvider(descriptor.createAuthenticationProvider(null));
         return m;
     }

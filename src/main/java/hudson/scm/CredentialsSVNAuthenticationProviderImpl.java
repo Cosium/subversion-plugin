@@ -15,6 +15,8 @@ import hudson.model.Item;
 import hudson.remoting.Channel;
 import hudson.security.ACL;
 import hudson.util.Scrambler;
+import jenkins.svnkit.auth.AuthenticationManager;
+import jenkins.svnkit.auth.SVNSSLAuthentication;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.tmatesoft.svn.core.SVNErrorCode;
 import org.tmatesoft.svn.core.SVNErrorMessage;
@@ -24,7 +26,6 @@ import org.tmatesoft.svn.core.auth.ISVNAuthenticationProvider;
 import org.tmatesoft.svn.core.auth.SVNAuthentication;
 import org.tmatesoft.svn.core.auth.SVNPasswordAuthentication;
 import org.tmatesoft.svn.core.auth.SVNSSHAuthentication;
-import org.tmatesoft.svn.core.auth.SVNSSLAuthentication;
 import org.tmatesoft.svn.core.auth.SVNUserNameAuthentication;
 
 import javax.security.auth.DestroyFailedException;
@@ -427,8 +428,8 @@ public class CredentialsSVNAuthenticationProviderImpl implements ISVNAuthenticat
                         } catch (UnrecoverableEntryException e2) {
                             throw new RuntimeException(
                                     SVNErrorMessage
-                                            .create(SVNErrorCode.AUTHN_CREDS_UNAVAILABLE, "Unable to save certificate")
-                                            .initCause(e2));
+                                            .create(SVNErrorCode.AUTHN_CREDS_UNAVAILABLE, "Unable to save certificate").getFullMessage(),
+                                            e2);
                         }
                     }
                     dst.setEntry(alias, entry, passwordProtection);
@@ -438,20 +439,20 @@ public class CredentialsSVNAuthenticationProviderImpl implements ISVNAuthenticat
                 certificateFile = bos.toByteArray();
             } catch (KeyStoreException e) {
                 throw new RuntimeException(
-                        SVNErrorMessage.create(SVNErrorCode.AUTHN_CREDS_UNAVAILABLE, "Unable to save certificate")
-                                .initCause(e));
+                        SVNErrorMessage.create(SVNErrorCode.AUTHN_CREDS_UNAVAILABLE, "Unable to save certificate").getFullMessage(),
+                                e);
             } catch (CertificateException e) {
                 throw new RuntimeException(
-                        SVNErrorMessage.create(SVNErrorCode.AUTHN_CREDS_UNAVAILABLE, "Unable to save certificate")
-                                .initCause(e));
+                        SVNErrorMessage.create(SVNErrorCode.AUTHN_CREDS_UNAVAILABLE, "Unable to save certificate").getFullMessage(),
+                                e);
             } catch (NoSuchAlgorithmException e) {
                 throw new RuntimeException(
-                        SVNErrorMessage.create(SVNErrorCode.AUTHN_CREDS_UNAVAILABLE, "Unable to save certificate")
-                                .initCause(e));
+                        SVNErrorMessage.create(SVNErrorCode.AUTHN_CREDS_UNAVAILABLE, "Unable to save certificate").getFullMessage(),
+                                e);
             } catch (IOException e) {
                 throw new RuntimeException(
-                        SVNErrorMessage.create(SVNErrorCode.AUTHN_CREDS_UNAVAILABLE, "Unable to save certificate")
-                                .initCause(e));
+                        SVNErrorMessage.create(SVNErrorCode.AUTHN_CREDS_UNAVAILABLE, "Unable to save certificate").getFullMessage(),
+                                e);
             } finally {
                 try {
                     passwordProtection.destroy();
@@ -463,7 +464,7 @@ public class CredentialsSVNAuthenticationProviderImpl implements ISVNAuthenticat
         }
 
         public List<SVNAuthentication> build(String kind, SVNURL url) {
-            if (ISVNAuthenticationManager.SSL.equals(kind)) {
+            if (AuthenticationManager.SSL.equals(kind)) {
                 SVNSSLAuthentication authentication =
                         new SVNSSLAuthentication(certificateFile, Scrambler.descramble(password), false, url, false);
                 authentication.setCertificatePath("dummy"); // TODO: remove this JENKINS-19175 workaround
